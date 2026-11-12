@@ -165,13 +165,15 @@ Starting `run.bat` a second time while the first window is still open fails, bec
 
 **`No module named 'fastapi'`** (the name is one word, fastapi). The app was started with a Python that never received the libraries. This happens if `python server.py` was typed by hand, or if the first download was interrupted. On Windows, close the window and double-click `run.bat` again. It installs whatever is missing, and the window stays open if the install fails.
 
-To do that step by hand, open Command Prompt in the project folder and run:
+**SSL, certificate, or `CERTIFICATE_VERIFY_FAILED` while downloading.** The computer is online, but Python does not trust the certificate it was shown. Antivirus "HTTPS scanning" and school or office networks cause this, and so does a wrong date and time. Check the clock first. Then, in Command Prompt, in the project folder, run:
 
 ```bat
 python -m venv .venv
-.venv\Scripts\python.exe -m pip install -r requirements.txt
+.venv\Scripts\python.exe -m pip install --trusted-host pypi.org --trusted-host files.pythonhosted.org --trusted-host pypi.python.org -r requirements.txt
 .venv\Scripts\python.exe server.py
 ```
+
+`run.bat` tries a normal download first, then runs that same certificate workaround on its own if the download fails. Double-click it again after you replace the file with the latest copy.
 
 On macOS or Linux, use `.venv/bin/python` instead of `.venv\Scripts\python.exe`.
 
@@ -179,7 +181,7 @@ On macOS or Linux, use `.venv/bin/python` instead of `.venv\Scripts\python.exe`.
 
 **The Microsoft Store opens when you type python.** Same fix as above. The Store stub is not a Python install.
 
-**The first launch stops while downloading.** Check your network connection and double-click `run.bat` again. It will resume the install.
+**The first launch stops while downloading.** If the window mentions SSL or a certificate, use the certificate steps above. Otherwise check the network connection and double-click `run.bat` again. It will resume the install.
 
 **The browser does not open.** Look at the black window for an error. You can also open [http://127.0.0.1:8765](http://127.0.0.1:8765) yourself.
 

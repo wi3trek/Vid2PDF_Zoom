@@ -15,6 +15,14 @@ if not errorlevel 1 goto launch
 
 echo Installing libraries. The first time this can take a minute...
 .venv\Scripts\python.exe -m pip install -r requirements.txt
+if not errorlevel 1 goto launch
+
+echo.
+echo The download failed a certificate check. That can happen while you are online.
+echo Antivirus and some school or office networks replace the site certificate.
+echo Retrying the Python package sites with that check relaxed.
+echo.
+.venv\Scripts\python.exe -m pip install --trusted-host pypi.org --trusted-host files.pythonhosted.org --trusted-host pypi.python.org -r requirements.txt
 if errorlevel 1 goto pipfail
 
 :launch
@@ -38,7 +46,8 @@ exit /b 1
 :pipfail
 echo.
 echo The libraries did not install, so the app cannot start.
-echo Check the internet connection, then run this file again.
-echo If it still fails, delete the .venv folder in this directory and run this file again.
+echo If the message above mentions SSL or certificate, check the computer's date and time,
+echo then turn off HTTPS scanning in the antivirus and run this file again.
+echo You can also delete the .venv folder in this directory and run this file again.
 pause
 exit /b 1
