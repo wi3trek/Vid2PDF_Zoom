@@ -18,7 +18,7 @@ You do not need to install ffmpeg yourself. The Python packages below include a 
 
 ## Install it on Windows
 
-These steps assume you have never used Python. You only do the Python install once. After that, starting the app is a double-click.
+These steps assume you have never used Python. You only do the Python install once. After that, starting the app is one command.
 
 ### 1. Install Python
 
@@ -44,7 +44,7 @@ If a window for the Microsoft Store opens instead, the installer did not get ont
 2. Click the green **Code** button.
 3. Click **Download ZIP**.
 4. Find the zip in your Downloads folder. Right-click it and choose **Extract All**.
-5. Put the extracted folder somewhere you can find again, such as `C:\Users\YourName\Code\Vid2PDF_Zoom`. Leave the files inside that folder. Do not pull `run.bat` out on its own.
+5. Put the extracted folder somewhere you can find again, such as `C:\Users\YourName\Code\Vid2PDF_Zoom`. Leave the files inside that folder.
 
 If you already use Git, this is the same thing:
 
@@ -56,17 +56,28 @@ cd Vid2PDF_Zoom
 ### 3. Start the app
 
 1. Open the project folder.
-2. Double-click **run.bat**.
+2. Click the address bar at the top of that folder window, type `cmd`, and press Enter. A black Command Prompt window opens in the right folder.
+3. Copy the three lines below. In the black window, right-click to paste, then press Enter.
 
-The first launch takes a minute. A black window opens and Python creates a private folder named `.venv`, then downloads the libraries the app needs (FastAPI, Pillow, fpdf2, and a few others). Leave that window open.
+```bat
+python -m venv .venv
+.venv\Scripts\python.exe -m pip install -r requirements.txt
+.venv\Scripts\python.exe server.py
+```
 
-Start it with `run.bat`. Do not type `python server.py` yourself. That uses a Python which does not have the libraries, and it stops with `No module named 'fastapi'`.
+The first line makes a private folder named `.venv` for this app. The second downloads the libraries (FastAPI, Pillow, fpdf2, and a few others). The third starts the app. The first time, the download can take a minute. Leave the window open.
 
-When the download finishes, your browser opens to:
+Paste all three lines. Typing only `python server.py` skips the libraries and stops with `No module named 'fastapi'`.
+
+When the download finishes, the browser opens to:
 
 [http://127.0.0.1:8765](http://127.0.0.1:8765)
 
-That address only works on your machine. Later launches are quick, because the libraries are already downloaded.
+That address only works on your machine. The next time you want the app, open Command Prompt in the folder again and run only the last line:
+
+```bat
+.venv\Scripts\python.exe server.py
+```
 
 The black window is the app. Closing it stops the app. If the page will not load, check that the window is still open.
 
@@ -151,19 +162,30 @@ The crop, keyframes, trim, and page shape are saved automatically. A copy is wri
 
 ## Stop the app
 
-Close the black window that `run.bat` opened, or press Ctrl+C in that window. The browser tab can stay open. It will show an error until you start the app again.
+Close the black Command Prompt window, or press Ctrl+C in that window. The browser tab can stay open. It will show an error until you start the app again.
 
-Starting `run.bat` a second time while the first window is still open fails, because port 8765 is already taken. Close the first window, then start it again.
+Starting the app a second time while the first window is still open fails, because port 8765 is already taken. Close the first window, then start it again.
 
 ## Optional desktop shortcut (Windows)
 
-1. Right-click `run.bat` and choose **Create shortcut**, or right-click the desktop, choose **New → Shortcut**, and point it at `run.bat` inside the project folder.
-2. Right-click the shortcut, choose **Properties**, and set **Start in** to the project folder.
-3. The file `vid2pdf-zoom.ico` in the project folder can be used as the shortcut icon (**Change Icon**).
+Chrome warns about a downloaded zip that already contains a `.bat` file, so the download does not include one. After the app has started once, you can make your own double-click launcher on the computer:
+
+1. Open Notepad and paste this:
+
+```bat
+@echo off
+cd /d "%~dp0"
+.venv\Scripts\python.exe server.py
+```
+
+2. Choose **File → Save As**. Go to the project folder. Set **Save as type** to **All files**. Name the file `run.bat`.
+3. Right-click `run.bat`, choose **Create shortcut**, and move the shortcut to the desktop.
+4. Right-click the shortcut, choose **Properties**, and set **Start in** to the project folder.
+5. The file `vid2pdf-zoom.ico` in the project folder can be used as the shortcut icon (**Change Icon**).
 
 ## If something goes wrong
 
-**`No module named 'fastapi'`** (the name is one word, fastapi). The app was started with a Python that never received the libraries. This happens if `python server.py` was typed by hand, or if the first download was interrupted. On Windows, close the window and double-click `run.bat` again. It installs whatever is missing, and the window stays open if the install fails.
+**Chrome says "Virus detected" on the GitHub zip.** That warning came from an older copy of this project that included a `run.bat` launcher. The file is a normal installer script, and it is no longer in the download. Download the zip again. If Chrome still blocks it, open the download entry, choose **Keep** or **Download anyway**, or clone the project with Git instead of using the zip.
 
 **SSL, certificate, or `CERTIFICATE_VERIFY_FAILED` while downloading.** The computer is online, but Python does not trust the certificate it was shown. Antivirus "HTTPS scanning" and school or office networks cause this, and so does a wrong date and time. Check the clock first. Then, in Command Prompt, in the project folder, run:
 
@@ -173,15 +195,15 @@ python -m venv .venv
 .venv\Scripts\python.exe server.py
 ```
 
-`run.bat` tries a normal download first, then runs that same certificate workaround on its own if the download fails. Double-click it again after you replace the file with the latest copy.
-
 On macOS or Linux, use `.venv/bin/python` instead of `.venv\Scripts\python.exe`.
+
+**`No module named 'fastapi'`** (the name is one word, fastapi). The libraries were never installed, usually because only `python server.py` was typed. Run all three commands from the Windows install steps above.
 
 **`python` is not recognized.** Python is not on PATH. Repeat the installer step and check **Add python.exe to PATH**, then open a new Command Prompt.
 
 **The Microsoft Store opens when you type python.** Same fix as above. The Store stub is not a Python install.
 
-**The first launch stops while downloading.** If the window mentions SSL or a certificate, use the certificate steps above. Otherwise check the network connection and double-click `run.bat` again. It will resume the install.
+**The first launch stops while downloading.** If the window mentions SSL or a certificate, use the certificate steps above. Otherwise check the network connection and run the three install commands again. Pip resumes a download that was interrupted.
 
 **The browser does not open.** Look at the black window for an error. You can also open [http://127.0.0.1:8765](http://127.0.0.1:8765) yourself.
 
@@ -215,7 +237,6 @@ python -m unittest tests.test_zoom_math tests.test_engine -q
 
 | Path | What it is |
 | --- | --- |
-| `run.bat` | Windows launcher. Creates `.venv`, installs the libraries if they are missing, then starts the app |
 | `server.py` | The local web server |
 | `engine.py` | Frame decoding, the crop, the review video, and the PDF |
 | `zoom_math.py` | Box size, interpolation, and rotation math |

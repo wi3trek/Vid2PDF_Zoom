@@ -4,3 +4,5 @@ __pycache__/
 output/
 *.zoom.json
 .pytest_cache/
+run.bat
+*.lnk

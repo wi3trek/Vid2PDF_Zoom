@@ -1,8 +1,11 @@
 """Local viewer for keyframed parachute crops.
 
-On Windows, double-click run.bat. That installs the libraries and opens
-http://127.0.0.1:8765. Running ``python server.py`` with a different Python
-skips those libraries and fails with ``No module named 'fastapi'``.
+Start it from the project folder with the private environment's Python:
+
+    .venv/Scripts/python.exe server.py
+
+The page opens at http://127.0.0.1:8765. Running some other Python skips the
+libraries and fails with ``No module named 'fastapi'``.
 """
 
 from __future__ import annotations
@@ -27,9 +30,6 @@ def _missing_library(exc: ModuleNotFoundError) -> None:
         "\n"
         "The libraries for this app are not installed in the Python that just started.\n"
         "The library name is fastapi, one word.\n"
-        "\n"
-        "On Windows, close this window and double-click run.bat in this folder.\n"
-        "Leave that window open. The first time, it downloads the libraries, then opens the browser.\n"
         "\n"
         "From a terminal, in this folder:\n"
         "  python -m venv .venv\n"
