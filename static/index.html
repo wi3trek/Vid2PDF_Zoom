@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vid2PDF Zoom</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='1.5' y='1.5' width='13' height='13' fill='none' stroke='%23f0b429' stroke-width='1.5'/%3E%3Cpath d='M8 3v10M3 8h10' stroke='%23f0b429' stroke-width='1.2'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body data-mode="edit">
+  <div id="app">
+    <header>
+      <div class="brand">
+        <span class="mark" aria-hidden="true"></span>
+        <strong>Vid2PDF Zoom</strong>
+      </div>
+      <div class="modes" role="tablist" aria-label="Workspace">
+        <button type="button" id="mode-edit" role="tab" aria-selected="true">Edit</button>
+        <button type="button" id="mode-review" role="tab" aria-selected="false">Review</button>
+      </div>
+      <p id="status" role="status"></p>
+    </header>
+
+    <section id="stage">
+      <div id="editor-view">
+        <div id="frame-layer">
+          <video id="source" playsinline preload="auto"></video>
+          <canvas id="overlay"></canvas>
+        </div>
+        <div class="hud">
+          <span id="hud-mode" class="chip">No video</span>
+          <span id="hud-zoom" class="chip"></span>
+        </div>
+      </div>
+      <div id="review-view">
+        <div id="review-stage">
+          <video id="review" playsinline></video>
+          <div class="hud"><span id="review-zoom" class="chip" hidden>View 1×</span></div>
+        </div>
+        <div class="review-bar">
+          <button type="button" id="key-this">Keyframe this moment</button>
+          <p id="stale" hidden>The crop changed after this review. Render again to judge the new path.</p>
+        </div>
+      </div>
+      <div id="empty"><p>Open a video, then put the crosshair on the subject.</p></div>
+      <div id="loading" hidden>Loading picture…</div>
+    </section>
+
+    <footer id="transport">
+      <div class="transport-row">
+        <button type="button" id="step-back" title="Previous frame">−1f <kbd>,</kbd></button>
+        <button type="button" id="play">Play</button>
+        <button type="button" id="step-fwd" title="Next frame">+1f <kbd>.</kbd></button>
+        <span id="timecode" class="mono">00:00.000</span>
+        <span id="frame-label">frame 0</span>
+        <label class="inline">Speed
+          <select id="rate">
+            <option value="0.25">0.25×</option>
+            <option value="0.5">0.5×</option>
+            <option value="1" selected>1×</option>
+            <option value="2">2×</option>
+          </select>
+        </label>
+        <span class="spacer"></span>
+        <button type="button" id="set-in">Set start</button>
+        <button type="button" id="set-out">Set end</button>
+        <button type="button" id="reset-view">Reset view</button>
+      </div>
+      <div id="timeline" aria-label="Video timeline. Scroll to zoom, Shift-scroll to pan.">
+        <div id="shade-l" class="shade"></div>
+        <div id="shade-r" class="shade"></div>
+        <div id="keys"></div>
+        <div id="playhead"></div>
+        <button type="button" id="trim-in" class="trim" data-trim="in" title="Start">Start</button>
+        <button type="button" id="trim-out" class="trim" data-trim="out" title="End">End</button>
+      </div>
+      <p class="legend"><i class="swatch in"></i> start <i class="swatch out"></i> end <i class="swatch key"></i> keyframe <i class="swatch play"></i> playhead <span class="spacer"></span><span id="timeline-range" class="mono">Full clip</span><button type="button" id="timeline-trim" class="mini" title="Zoom the timeline to the trimmed range" disabled>Trim</button><button type="button" id="timeline-fit" class="mini" title="Show the whole clip (\)" disabled>Fit</button></p>
+    </footer>
+
+    <aside id="inspector">
+      <div class="scroll">
+        <p class="intro">The box is each PDF page. Put the crosshair on the subject and set a keyframe where it moves. Frames in between are interpolated. Watch the review, then export the stills.</p>
+
+        <div class="block">
+          <h2>Video</h2>
+          <div class="path-row">
+            <input id="path" class="mono" type="text" placeholder="C:\Videos\jump.mp4" spellcheck="false" autocomplete="off">
+            <button type="button" id="browse">Browse</button>
+            <button type="button" id="open">Open</button>
+          </div>
+          <p id="meta" class="hint">No video open</p>
+          <button type="button" id="proxy" hidden>Make playable preview</button>
+        </div>
+
+        <div class="block">
+          <h2>Output frame</h2>
+          <label>Aspect
+            <select id="preset"></select>
+          </label>
+          <div class="pair">
+            <label>Width
+              <input id="aspect-w" type="number" min="0.1" step="0.1" value="16">
+            </label>
+            <label>Height
+              <input id="aspect-h" type="number" min="0.1" step="0.1" value="9">
+            </label>
+          </div>
+          <p class="hint">The crop and every PDF page keep this shape. 1× fits the whole frame.</p>
+        </div>
+
+        <div class="block">
+          <h2>Range</h2>
+          <div class="pair">
+            <label>Start
+              <input id="start" class="mono" type="text" value="00:00.000" autocomplete="off">
+            </label>
+            <label>End
+              <input id="end" class="mono" type="text" value="00:00.000" autocomplete="off">
+            </label>
+          </div>
+          <p class="hint">Review and PDF use this span. Keyframes outside it still steer the path.</p>
+        </div>
+
+        <div class="block">
+          <h2>Crop</h2>
+          <label>Zoom
+            <input id="zoom-slider" type="range" min="0" max="100" value="20">
+          </label>
+          <div class="pair">
+            <label>Center X %
+              <input id="cx" type="number" min="0" max="100" step="0.1" value="50">
+            </label>
+            <label>Center Y %
+              <input id="cy" type="number" min="0" max="100" step="0.1" value="50">
+            </label>
+          </div>
+          <div class="pair">
+            <label>Zoom ×
+              <input id="zoom" type="number" min="1" max="30" step="0.01" value="2">
+            </label>
+            <label>Crop
+              <input id="crop-px" class="mono" type="text" value="" readonly>
+            </label>
+          </div>
+          <div class="pair">
+            <label>Turn °
+              <input id="rot" type="number" step="1" value="0">
+            </label>
+            <button type="button" id="level">Level</button>
+          </div>
+          <div class="pair">
+            <button type="button" id="set-key">Set keyframe</button>
+            <button type="button" id="delete-key">Delete keyframe</button>
+          </div>
+          <p class="hint">Drag the box to move the crosshair. Drag a corner to turn the page around the crosshair. Zoom sets the window size and stays put while you turn. TOP is the top of each PDF page. Level puts that edge back up.</p>
+        </div>
+
+        <div class="block">
+          <h2>Keyframes</h2>
+          <p id="key-empty" class="hint">None yet. The box you see is used for the whole clip.</p>
+          <ul id="key-list"></ul>
+          <p id="gap" class="hint"></p>
+        </div>
+
+        <div class="block">
+          <h2>Output</h2>
+          <div class="pair">
+            <label>Review step
+              <input id="preview-step" type="number" min="1" step="1" value="1">
+            </label>
+            <label>PDF step
+              <input id="pdf-step" type="number" min="1" step="1" value="1">
+            </label>
+          </div>
+          <label class="check">
+            <input id="crosshair" type="checkbox" checked>
+            Crosshair on the review only
+          </label>
+          <p class="hint">Step 1 keeps every frame, like vid2pdf. Higher steps skip frames.</p>
+          <details>
+            <summary>Keys</summary>
+            <ul class="keys">
+              <li>Space plays and pauses</li>
+              <li>, and . step one frame back and forward. Left and right do the same, and Shift steps one second</li>
+              <li>Shift+, and Shift+. jump to the previous and next keyframe</li>
+              <li>Alt and the arrows nudge the box, Shift nudges by 10 pixels</li>
+              <li>[ and ] set the start and end</li>
+              <li>K sets a keyframe, Delete removes it</li>
+              <li>Ctrl+Z undoes, Ctrl+Y redoes</li>
+              <li>− and + magnify the picture. The wheel zooms toward the cursor. Middle-drag, right-drag, or Alt-drag pans. 0 resets</li>
+              <li>The wheel over the timeline zooms it, Shift-wheel pans it, Trim shows the start-to-end range, and \ fits the whole clip</li>
+            </ul>
+          </details>
+        </div>
+      </div>
+      <div class="actions">
+        <button type="button" id="render" class="primary" disabled>Render review</button>
+        <button type="button" id="export" disabled>Export PDF</button>
+        <p id="estimates" class="hint"></p>
+        <div id="job" hidden>
+          <div id="job-label"></div>
+          <div class="bar"><div id="job-bar"></div></div>
+          <button type="button" id="job-cancel">Cancel</button>
+        </div>
+        <div id="results" hidden>
+          <a id="pdf-link" class="linkish" href="#">Download PDF</a>
+          <button type="button" id="reveal">Show in folder</button>
+        </div>
+      </div>
+    </aside>
+  </div>
+  <script src="/static/app.js"></script>
+</body>
+</html>
