@@ -1,6 +1,8 @@
 """Local viewer for keyframed parachute crops.
 
-Run with ``python server.py``. The page opens at http://127.0.0.1:8765.
+On Windows, double-click run.bat. That installs the libraries and opens
+http://127.0.0.1:8765. Running ``python server.py`` with a different Python
+skips those libraries and fails with ``No module named 'fastapi'``.
 """
 
 from __future__ import annotations
@@ -17,12 +19,38 @@ import uuid
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import Body, FastAPI, HTTPException
-from fastapi.responses import FileResponse, JSONResponse, Response
-from fastapi.staticfiles import StaticFiles
 
-from engine import CancelToken, probe, render_pdf, render_preview, render_proxy
-from zoom_math import clean_aspect, clean_keys
+def _missing_library(exc: ModuleNotFoundError) -> None:
+    missing = exc.name or "a required library"
+    print(
+        f"Python could not find {missing}.\n"
+        "\n"
+        "The libraries for this app are not installed in the Python that just started.\n"
+        "The library name is fastapi, one word.\n"
+        "\n"
+        "On Windows, close this window and double-click run.bat in this folder.\n"
+        "Leave that window open. The first time, it downloads the libraries, then opens the browser.\n"
+        "\n"
+        "From a terminal, in this folder:\n"
+        "  python -m venv .venv\n"
+        "  .venv\\Scripts\\python.exe -m pip install -r requirements.txt\n"
+        "  .venv\\Scripts\\python.exe server.py\n"
+        "\n"
+        "On macOS or Linux, use .venv/bin/python instead of .venv\\Scripts\\python.exe.\n",
+        file=sys.stderr,
+    )
+    raise SystemExit(1)
+
+
+try:
+    from fastapi import Body, FastAPI, HTTPException
+    from fastapi.responses import FileResponse, JSONResponse, Response
+    from fastapi.staticfiles import StaticFiles
+
+    from engine import CancelToken, probe, render_pdf, render_preview, render_proxy
+    from zoom_math import clean_aspect, clean_keys
+except ModuleNotFoundError as exc:
+    _missing_library(exc)
 
 ROOT = Path(__file__).resolve().parent
 STATIC = ROOT / "static"

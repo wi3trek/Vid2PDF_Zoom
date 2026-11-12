@@ -60,6 +60,8 @@ cd Vid2PDF_Zoom
 
 The first launch takes a minute. A black window opens and Python creates a private folder named `.venv`, then downloads the libraries the app needs (FastAPI, Pillow, fpdf2, and a few others). Leave that window open.
 
+Start it with `run.bat`. Do not type `python server.py` yourself. That uses a Python which does not have the libraries, and it stops with `No module named 'fastapi'`.
+
 When the download finishes, your browser opens to:
 
 [http://127.0.0.1:8765](http://127.0.0.1:8765)
@@ -161,6 +163,18 @@ Starting `run.bat` a second time while the first window is still open fails, bec
 
 ## If something goes wrong
 
+**`No module named 'fastapi'`** (the name is one word, fastapi). The app was started with a Python that never received the libraries. This happens if `python server.py` was typed by hand, or if the first download was interrupted. On Windows, close the window and double-click `run.bat` again. It installs whatever is missing, and the window stays open if the install fails.
+
+To do that step by hand, open Command Prompt in the project folder and run:
+
+```bat
+python -m venv .venv
+.venv\Scripts\python.exe -m pip install -r requirements.txt
+.venv\Scripts\python.exe server.py
+```
+
+On macOS or Linux, use `.venv/bin/python` instead of `.venv\Scripts\python.exe`.
+
 **`python` is not recognized.** Python is not on PATH. Repeat the installer step and check **Add python.exe to PATH**, then open a new Command Prompt.
 
 **The Microsoft Store opens when you type python.** Same fix as above. The Store stub is not a Python install.
@@ -199,7 +213,7 @@ python -m unittest tests.test_zoom_math tests.test_engine -q
 
 | Path | What it is |
 | --- | --- |
-| `run.bat` | Windows launcher. Creates `.venv` on the first run, then starts the app |
+| `run.bat` | Windows launcher. Creates `.venv`, installs the libraries if they are missing, then starts the app |
 | `server.py` | The local web server |
 | `engine.py` | Frame decoding, the crop, the review video, and the PDF |
 | `zoom_math.py` | Box size, interpolation, and rotation math |
